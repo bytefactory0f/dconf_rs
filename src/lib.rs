@@ -80,6 +80,19 @@ pub fn get_double(key: &str) -> Result<f64, String> {
 	}
 }
 
+/// Lists the contents of a directory
+pub fn list_dir(key: &str) -> Result<Vec<String>, String> {
+    match list(key) {
+        Ok(mut values) => {
+            if values[values.len() - 1] == "list" {
+                values.pop();
+            }
+            Ok(values)
+        },
+        Err(why) => Err(why)
+    }
+}
+
 
 // Helpers
 fn get(key: &str) -> Result<String, String> {
@@ -88,6 +101,21 @@ fn get(key: &str) -> Result<String, String> {
 	match cmd.output() {
 		Ok(output) => Ok(get_stdout(output)),
 		Err(_) => Err("Unable to get key".to_string()),
+	}
+}
+
+fn list(key: &str) -> Result<Vec<String>, String> {
+    if !key.ends_with("/") {
+        return Err("Key must end with a trailing '/'".to_string());
+    }
+
+    let mut cmd = Command::new("dconf");
+	cmd.args(&["list", key]);
+	match cmd.output() {
+		Ok(output) => {
+            Ok(get_stdout_lines(output).trim_end().split("\n").map(String::from).collect::<Vec<_>>())
+        },
+		Err(_) => Err("Unable to list key".to_string()),
 	}
 }
 
@@ -101,6 +129,10 @@ fn set(key: &str, value: &str) -> Result<(), String> {
 }
 
 fn get_stdout(output: Output) -> String {
-	let vs = output.stdout;
-	String::from_utf8(vs).unwrap().replace("\'", "").replace("\n", "")
+    get_stdout_lines(output).replace("\n", "")
+}
+
+fn get_stdout_lines(output: Output) -> String {
+    let vs = output.stdout;
+	String::from_utf8(vs).unwrap().replace("\'", "")
 }

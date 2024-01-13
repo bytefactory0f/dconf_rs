@@ -1,5 +1,9 @@
 # Changelog - dconf_rs
 
+## v0.4.0 - January 13, 2024
+**Changed:**
+- Added list_dir function to list the contents of a directory
+
 ## v0.3.0 - October 20, 2018
 
 **Changed:**
